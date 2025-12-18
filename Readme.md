@@ -1,24 +1,14 @@
-# Fullstack MERN Blogging Website
+# Full-Stack MERN Blogging Platform
 
-Fork this repo of "MERN Blogging Website" to start following the video tutorial.
+A production-ready full-stack blogging platform built using the MERN stack, designed for creating, publishing, and managing blogs through a clean and scalable web application. The platform includes secure authentication, rich content editing, user interactions, and a well-structured backend API.
 
-Checkout website demo - [Demo](https://youtu.be/J7BGuuuvDDk)
+## Tech Stack
+React, Vite, Tailwind CSS, Node.js, Express.js, MongoDB, JWT, Firebase Admin
 
-![Thumbnail](https://c10.patreonusercontent.com/4/patreon-media/p/post/90122909/dd5363bd03fb4a6c8fcd5d15df98e6bf/eyJ3Ijo4MjB9/1.png?token-time=1697414400&token-hash=BZ-Mzp19WnBLcCFB8LmJFDw98mpnCRGcOCt_T615miY%3D)
+## Setup
+Clone the repository, install dependencies for both frontend and backend, and configure environment variables before running the application.  
+For the backend, create a `.env` file inside the `server/` directory and define required variables such as `PORT`, `MONGO_URI`, `JWT_SECRET`, and Firebase credentials.  
+Start the backend server using `npm start`, then navigate to the frontend directory and run `npm run dev` to launch the client application.
 
-This website features include -
-1. Modern Blog Editor using Editor JS.
-2. Google Authentication for Users
-3. Dynamic Blog Pages on dynamic urls.
-4. Search Page for Searching Blogs & users.
-5. Dedicated Users Profile with thier social links and written blogs.
-6. Dedicated dashboard to manage blogs either published or draft.
-7. Blog Post Analytics, editable and deletable.
-8. Like interaction on Blogs with feature to comment on the blog.
-9. Reply to comments. ( A nested Comment System )
-10. Every interaction on site stores as a notification for their respective users.
-11. Recent notification highlight separating them from old notifications.
-12. Edit profile option to update social links, bio and username
-13. Also user can change login password from settings.
-14. Its mobile responsive with modern design + fade in animation on pages.
-And much more.
+## Status
+Actively developed 🚀
