@@ -1,0 +1,37 @@
+# Accesstoken -  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MTllMWQ2OGNmMjhhMWFhYjYxNWNlNSIsImlhdCI6MTc0NjUyNjY3OH0.ddOR6sxkcK1U_i7Enf7xPsQea59ttmYIZ0s1eVXVacg
+
+# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NTNmMjBmN2U2ZjhhMTc5NjIwZGFiNyIsImlhdCI6MTc1MDMzMTkyOX0.TiPJAhsiY2_WoeukZx42_LJwHVlnl50X9m5djl9C4gA
+
+# POST http://localhost:3000/signup
+# Content-Type: application/json
+
+# {
+#     "fullname": "john",
+#     "email": "john2@gmail.com",
+#     "password": "John@123"
+# }
+
+# POST http://localhost:3000/get-blog
+# Content-Type: application/json
+
+# {
+#     "blog_id": "fjas-jfftBtZ7TTWBxTV9b3NL3Yy"
+# }
+
+
+# POST http://localhost:3000/get-profile
+# Content-Type: application/json
+
+# {
+#     "username": "subodhmuleofficial"
+# }
+
+# 
+
+# POST http://localhost:3000/signin
+# Content-Type: application/json
+
+# {
+#     "email": "subodh@gmail.com",
+#     "password": "Subodh@123"
+# }

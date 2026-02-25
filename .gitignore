@@ -1,3 +1,6 @@
+server/react-js-blogging-websit-71a5d-firebase-adminsdk-fbsvc-7a76d5477a.json
+
+
 ############################
 # Dependencies
 ############################
@@ -107,9 +110,3 @@ coverage/
 ############################
 uploads/
 public/uploads/
-
-
-
-############################
-# firebase admin creds
-
