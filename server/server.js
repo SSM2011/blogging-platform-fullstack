@@ -25,7 +25,7 @@ import Notification from "./Schema/Notification.js"
 import Comment from "./Schema/Comment.js"
 
 const server = express();
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccountKey)
@@ -42,7 +42,7 @@ mongoose.connect(process.env.DB_LOCATION, { autoIndex: true });
 
 //setting up s3 bucket
 const s3 = new aws.S3({
-    region: 'eu-north-1',
+    region: process.env.AWS_REGION,
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 })
@@ -53,7 +53,7 @@ const generateUploadURL = async () => {
     const imageName = `${nanoid()}-${date.getTime()}.jpeg`
 
     return await s3.getSignedUrlPromise('putObject', {
-        Bucket: 'blogging-platform-abhi',
+        Bucket: process.env.AWS_BUCKET_NAME,
         Key: imageName,
         Expires: 1000,
         ContentType: "image/jpeg"

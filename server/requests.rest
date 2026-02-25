@@ -35,3 +35,6 @@
 #     "email": "subodh@gmail.com",
 #     "password": "Subodh@123"
 # }
+
+
+GET http://localhost:3001/get-upload-url
