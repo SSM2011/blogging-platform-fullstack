@@ -1,4 +1,4 @@
-# Medium Clone – MERN Blogging Platform
+# WritersRoom – MERN Blogging Platform
 
 A full‑stack blogging platform inspired by **Medium.com**, built with the **MERN stack**, **Firebase Auth**, **AWS S3**, and a rich‑text editor (Editor.js). Users can write and publish blogs, manage drafts, interact via likes and comments, and keep track of activity through a personalized dashboard and notifications.
 
