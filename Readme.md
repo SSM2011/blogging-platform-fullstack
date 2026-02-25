@@ -280,3 +280,14 @@ Authorization: Bearer <JWT_ACCESS_TOKEN>
   - Secret management and `.env` handling.
   - Error handling and logging.
   - S3 bucket permissions and Firebase credentials.
+ 
+### Contributing
+
+1. Fork the repository or create a feature branch.
+2. Install dependencies and configure `.env`.
+3. Open a pull request with a clear description of your changes.
+
+
+### License
+
+This project is licensed under the MIT License — see the LICENSE file for details.
