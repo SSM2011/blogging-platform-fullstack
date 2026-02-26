@@ -1,5 +1,22 @@
 # WritersRoom – MERN Blogging Platform
 
+## 🌐 Live Demo
+
+👉 https://writersroom.developersubodh.in  
+
+##  Production Deployment
+
+This project is fully deployed on **AWS EC2** with a production-grade architecture:
+
+- Dockerized frontend & backend services
+- Nginx reverse proxy with domain routing
+- HTTPS enabled via Let's Encrypt (auto-renewal)
+- Firebase Google OAuth configured for production
+- AWS S3 media storage with pre-signed uploads
+
+
+## Platform Description
+
 A full‑stack blogging platform inspired by **Medium.com**, built with the **MERN stack**, **Firebase Auth**, **AWS S3**, and a rich‑text editor (Editor.js). Users can write and publish blogs, manage drafts, interact via likes and comments, and keep track of activity through a personalized dashboard and notifications.
 
 ---
