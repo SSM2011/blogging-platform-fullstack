@@ -8,9 +8,6 @@ Dockerfile
 .git
 .gitignore
 
-.env
-.env.*
-
 logs
 *.log
 
