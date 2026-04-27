@@ -38,7 +38,17 @@ server.use(express.json());
 server.use(cors());
 
 // Connect to MongoDB
-mongoose.connect(process.env.DB_LOCATION, { autoIndex: true });
+if (process.env.NODE_ENV !== "test") {
+    mongoose.connect(process.env.DB_LOCATION, {
+        autoIndex: true
+    })
+    .then(() => {
+        console.log("DB connected");
+    })
+    .catch(err => {
+        console.log(err);
+    });
+}
 
 //setting up s3 bucket
 const s3 = new aws.S3({
@@ -1048,6 +1058,11 @@ server.post("/delete-blog", verifyJWT, (req, res) => {
 })
 
 // Start server
-server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+    server.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+export default server;
+

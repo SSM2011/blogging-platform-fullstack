@@ -4,9 +4,19 @@
   "description": "",
   "main": "server.js",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+ "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:verbose": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --verbose",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
     "start": "nodemon server.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": ["**/*.test.js"],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    }
   },
   "author": "",
   "license": "ISC",
@@ -22,7 +32,10 @@
     "nanoid": "^4.0.2"
   },
   "devDependencies": {
+    "@jest/globals": "^30.3.0",
+    "jest": "^30.3.0",
     "nodemon": "^3.0.1",
+    "supertest": "^7.2.2",
     "tw-colors": "^3.3.2"
   }
 }
