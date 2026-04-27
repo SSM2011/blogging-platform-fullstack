@@ -1,0 +1,78 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "blogging-frontend-image"
+        CONTAINER_NAME = "blogging-frontend-container"
+        HOST_PORT = "3001"
+        CONTAINER_PORT = "80"
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/SSM2011/blogging-platform-fullstack.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('blogging website - frontend') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                dir('blogging website - frontend') {
+                    cp /home/ubuntu/frontend.env .env
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('blogging website - frontend') {
+                    sh '''
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
+            }
+        }
+
+        stage('Stop Old Container') {
+            steps {
+                sh '''
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                '''
+            }
+        }
+
+        stage('Run New Container') {
+            steps {
+                sh '''
+                    docker run -d \
+                        --name $CONTAINER_NAME \
+                        -p $HOST_PORT:$CONTAINER_PORT \
+                        --restart unless-stopped \
+                        $IMAGE_NAME
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Frontend Deployment Successful'
+        }
+
+        failure {
+            echo 'Frontend Build Failed Deployment Stopped'
+        }
+    }
+}
