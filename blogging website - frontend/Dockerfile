@@ -1,15 +1,18 @@
-# ---------- build ----------
+# ---------- Build Stage ----------
 FROM node:20-alpine AS builder
+
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
 
-# ---------- serve ----------
+
+# ---------- Production Serve Stage ----------
 FROM nginx:alpine
 
 RUN rm -rf /usr/share/nginx/html/*
@@ -19,4 +22,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
-CMD ["nginx","-g","daemon off;"]
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]
