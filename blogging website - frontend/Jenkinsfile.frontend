@@ -28,8 +28,10 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('blogging website - frontend') {
-                    cp /home/ubuntu/frontend.env .env
-                    sh 'npm run build'
+                    sh '''
+                        cp /home/ubuntu/frontend.env .env
+                        npm run build
+                    '''
                 }
             }
         }
