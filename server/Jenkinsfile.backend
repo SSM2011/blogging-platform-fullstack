@@ -37,7 +37,7 @@ pipeline {
             steps {
                 dir('server') {
                     sh '''
-                        docker build -t $IMAGE_NAME .
+                        docker build --no-cache -t $IMAGE_NAME .
                     '''
                 }
             }
@@ -59,6 +59,7 @@ pipeline {
                         --name $CONTAINER_NAME \
                         -p $HOST_PORT:$APP_PORT \
                         --env-file /home/ubuntu/backend.env \
+                        -v /home/ubuntu/react-js-blogging-websit-71a5d-firebase-adminsdk-fbsvc-7a76d5477a.json:/app/react-js-blogging-websit-71a5d-firebase-adminsdk-fbsvc-7a76d5477a.json \
                         --restart unless-stopped \
                         $IMAGE_NAME
                 '''
