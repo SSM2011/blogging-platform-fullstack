@@ -4,7 +4,6 @@ import { UserContext } from "../App";
 import { filterPaginationData } from "../common/filter-pagination-data";
 import Loader from "../components/loader.component";
 import AnimationWrapper from "../common/page-animation";
-import Notification from "../../../server/Schema/Notification";
 import NoDataMessage from "../components/nodata.component";
 import NotificationCard from "../components/notification-card.component";
 import LoadMoreDataBtn from "../components/load-more.component";
