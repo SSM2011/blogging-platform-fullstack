@@ -1,0 +1,78 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "blogging-backend-image"
+        CONTAINER_NAME = "blogging-backend-container"
+        APP_PORT = "3000"
+        HOST_PORT = "3000"
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/SSM2011/blogging-platform-fullstack.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('server') {
+                    sh 'npm ci'
+                }
+            }
+        }
+
+        stage('Run Test Cases') {
+            steps {
+                dir('server') {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('server') {
+                    sh '''
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
+            }
+        }
+
+        stage('Stop Old Container') {
+            steps {
+                sh '''
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                '''
+            }
+        }
+
+        stage('Run New Container') {
+            steps {
+                sh '''
+                    docker run -d \
+                        --name $CONTAINER_NAME \
+                        -p $HOST_PORT:$APP_PORT \
+                        --env-file /home/ubuntu/backend.env \
+                        --restart unless-stopped \
+                        $IMAGE_NAME
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Backend Deployment Successful'
+        }
+
+        failure {
+            echo 'Backend Build Failed Deployment Stopped'
+        }
+    }
+}
