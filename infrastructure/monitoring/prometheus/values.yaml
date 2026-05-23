@@ -1,0 +1,181 @@
+# Helm values for kube-prometheus-stack
+# Install: helm install prometheus prometheus-community/kube-prometheus-stack -f values.yaml -n monitoring
+
+namespaceOverride: monitoring
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    retentionSize: "45GB"
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
+          storageClassName: gp3
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+
+    additionalScrapeConfigs:
+      - job_name: 'blogging-backend'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - blogging-platform
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            regex: blogging-backend
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            regex: "true"
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+          storageClassName: gp3
+
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+grafana:
+  enabled: true
+  adminPassword: "CHANGE_ME_IN_PRODUCTION"
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: gp3
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'blogging-platform'
+          orgId: 1
+          folder: 'Blogging Platform'
+          type: file
+          disableDeletion: true
+          editable: false
+          options:
+            path: /var/lib/grafana/dashboards/blogging-platform
+
+  dashboards:
+    blogging-platform:
+      blogging-platform-overview:
+        file: dashboards/blogging-platform.json
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+# Custom PrometheusRules for alerting
+additionalPrometheusRulesMap:
+  blogging-platform-alerts:
+    groups:
+      - name: blogging-platform.rules
+        rules:
+          - alert: HighErrorRate
+            expr: |
+              sum(rate(http_request_duration_seconds_count{status=~"5.."}[5m])) by (service)
+              /
+              sum(rate(http_request_duration_seconds_count[5m])) by (service)
+              > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High error rate on {{ $labels.service }}"
+              description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.service }}"
+
+          - alert: HighLatency
+            expr: |
+              histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))
+              > 2
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High latency on {{ $labels.service }}"
+              description: "P95 latency is {{ $value }}s for {{ $labels.service }}"
+
+          - alert: PodCrashLooping
+            expr: |
+              rate(kube_pod_container_status_restarts_total{namespace="blogging-platform"}[15m]) > 0
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.pod }} is crash looping"
+              description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+
+          - alert: PodNotReady
+            expr: |
+              kube_pod_status_ready{namespace="blogging-platform", condition="true"} == 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Pod {{ $labels.pod }} is not ready"
+              description: "Pod {{ $labels.pod }} has been in a non-ready state for more than 5 minutes"
+
+          - alert: HighMemoryUsage
+            expr: |
+              container_memory_working_set_bytes{namespace="blogging-platform"}
+              /
+              container_spec_memory_limit_bytes{namespace="blogging-platform"}
+              > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage in {{ $labels.pod }}"
+              description: "Memory usage is {{ $value | humanizePercentage }} of limit"

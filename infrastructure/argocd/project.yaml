@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: blogging-platform
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Blogging Platform - Writersroom Application Project
+
+  sourceRepos:
+    - 'https://github.com/SSM2011/blogging-platform-fullstack.git'
+
+  destinations:
+    - namespace: blogging-platform
+      server: https://kubernetes.default.svc
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: '*'
+    - group: apps
+      kind: '*'
+    - group: autoscaling
+      kind: '*'
+    - group: networking.k8s.io
+      kind: '*'
+    - group: policy
+      kind: '*'
+    - group: monitoring.coreos.com
+      kind: '*'
+
+  roles:
+    - name: admin
+      description: Full access to blogging-platform project
+      policies:
+        - p, proj:blogging-platform:admin, applications, *, blogging-platform/*, allow
+      groups:
+        - blogging-platform-admins
+
+  orphanedResources:
+    warn: true

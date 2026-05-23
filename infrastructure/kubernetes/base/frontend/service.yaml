@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blogging-frontend-svc
+  namespace: blogging-platform
+  labels:
+    app: blogging-frontend
+    tier: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: blogging-frontend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

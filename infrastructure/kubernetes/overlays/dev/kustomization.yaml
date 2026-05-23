@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: blogging-platform
+
+resources:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: dev
+
+patches:
+  - path: patches/frontend-replicas.yaml
+  - path: patches/backend-replicas.yaml
+  - path: patches/hpa.yaml
+
+images:
+  - name: blogging-platform/backend
+    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+    newTag: latest
+  - name: blogging-platform/frontend
+    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+    newTag: latest
+
+configMapGenerator:
+  - name: backend-config
+    behavior: merge
+    literals:
+      - NODE_ENV=development
+      - PORT=3000
+      - AWS_REGION=ap-south-1
+      - AWS_BUCKET_NAME=my-fullstack-blogging-platform

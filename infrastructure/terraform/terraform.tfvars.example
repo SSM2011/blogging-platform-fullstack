@@ -1,0 +1,20 @@
+# AWS Configuration
+aws_region  = "ap-south-1"
+environment = "production"
+
+# Project
+project_name = "blogging-platform"
+
+# VPC
+vpc_cidr             = "10.0.0.0/16"
+availability_zones   = ["ap-south-1a", "ap-south-1b"]
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"]
+
+# EKS
+eks_cluster_version     = "1.29"
+eks_node_instance_types = ["t3.medium"]
+eks_node_desired_size   = 2
+eks_node_min_size       = 1
+eks_node_max_size       = 4
+eks_node_disk_size      = 30

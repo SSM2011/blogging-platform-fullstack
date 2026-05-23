@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blogging-backend
+  namespace: blogging-platform
+  labels:
+    app: blogging-backend
+    tier: backend
+    app.kubernetes.io/name: blogging-backend
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: blogging-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: blogging-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: blogging-backend
+        tier: backend
+    spec:
+      serviceAccountName: blogging-backend-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+        - name: backend
+          image: blogging-platform/backend:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            - secretRef:
+                name: backend-secrets
+          env:
+            - name: FIREBASE_CREDENTIALS_PATH
+              value: /app/firebase-credentials/firebase-adminsdk.json
+          volumeMounts:
+            - name: firebase-credentials
+              mountPath: /app/firebase-credentials
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: firebase-credentials
+          secret:
+            secretName: firebase-credentials
+        - name: tmp
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: blogging-backend-sa
+  namespace: blogging-platform
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/blogging-platform-production-backend-s3
+  labels:
+    app: blogging-backend
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: blogging-platform
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  AWS_REGION: "ap-south-1"
+  AWS_BUCKET_NAME: "my-fullstack-blogging-platform"
+  AWS_SDK_JS_SUPPRESS_MAINTENANCE_MODE_MESSAGE: "1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secrets
+  namespace: blogging-platform
+type: Opaque
+stringData:
+  DB_LOCATION: "REPLACE_WITH_MONGODB_URI"
+  SECRET_ACCESS_KEY: "REPLACE_WITH_JWT_SECRET"

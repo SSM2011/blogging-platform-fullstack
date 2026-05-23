@@ -7,10 +7,21 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import admin from "firebase-admin";
 import fs from 'fs';
+import { collectDefaultMetrics, register, Histogram } from 'prom-client';
 
+const firebaseCredentialsPath = process.env.FIREBASE_CREDENTIALS_PATH || './react-js-blogging-websit-71a5d-firebase-adminsdk-fbsvc-7a76d5477a.json';
 const serviceAccountKey = JSON.parse(
-  fs.readFileSync('./react-js-blogging-websit-71a5d-firebase-adminsdk-fbsvc-7a76d5477a.json', 'utf-8')
+  fs.readFileSync(firebaseCredentialsPath, 'utf-8')
 );
+
+collectDefaultMetrics({ prefix: 'blogging_' });
+
+const httpRequestDuration = new Histogram({
+    name: 'http_request_duration_seconds',
+    help: 'Duration of HTTP requests in seconds',
+    labelBuckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5],
+    labelNames: ['method', 'route', 'status'],
+});
 
 import { getAuth } from 'firebase-admin/auth';
 import aws from "aws-sdk";
@@ -37,6 +48,28 @@ const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // Regex for pa
 server.use(express.json());
 server.use(cors());
 
+server.use((req, res, next) => {
+    const end = httpRequestDuration.startTimer();
+    res.on('finish', () => {
+        end({ method: req.method, route: req.route?.path || req.path, status: res.statusCode });
+    });
+    next();
+});
+
+server.get('/health', (req, res) => {
+    const dbState = mongoose.connection.readyState;
+    res.status(dbState === 1 ? 200 : 503).json({
+        status: dbState === 1 ? 'ok' : 'degraded',
+        timestamp: Date.now(),
+        uptime: process.uptime()
+    });
+});
+
+server.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+});
+
 // Connect to MongoDB
 if (process.env.NODE_ENV !== "test") {
     mongoose.connect(process.env.DB_LOCATION, {
@@ -50,12 +83,13 @@ if (process.env.NODE_ENV !== "test") {
     });
 }
 
-//setting up s3 bucket
-const s3 = new aws.S3({
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-})
+//setting up s3 bucket (uses IRSA in Kubernetes, falls back to env vars locally)
+const s3Config = { region: process.env.AWS_REGION };
+if (process.env.AWS_ACCESS_KEY && process.env.AWS_SECRET_ACCESS_KEY) {
+    s3Config.accessKeyId = process.env.AWS_ACCESS_KEY;
+    s3Config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+}
+const s3 = new aws.S3(s3Config)
 
 const generateUploadURL = async () => {
 
@@ -1058,11 +1092,33 @@ server.post("/delete-blog", verifyJWT, (req, res) => {
 })
 
 // Start server
+let httpServer;
 if (process.env.NODE_ENV !== "test") {
-    server.listen(PORT, () => {
+    httpServer = server.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
 }
+
+// Graceful shutdown
+const gracefulShutdown = (signal) => {
+    console.log(`${signal} received. Starting graceful shutdown...`);
+    if (httpServer) {
+        httpServer.close(() => {
+            console.log('HTTP server closed.');
+            mongoose.connection.close(false).then(() => {
+                console.log('MongoDB connection closed.');
+                process.exit(0);
+            });
+        });
+    }
+    setTimeout(() => {
+        console.error('Forceful shutdown after timeout.');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default server;
 

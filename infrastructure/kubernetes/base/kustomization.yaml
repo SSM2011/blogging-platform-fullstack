@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: blogging-platform
+
+resources:
+  - namespace.yaml
+  - backend/deployment.yaml
+  - backend/service.yaml
+  - backend/hpa.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - frontend/hpa.yaml
+  - ingress/ingress.yaml
+  - network-policies/network-policy.yaml
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: blogging-platform
+
+images:
+  - name: blogging-platform/backend
+    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+    newTag: latest
+  - name: blogging-platform/frontend
+    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+    newTag: latest

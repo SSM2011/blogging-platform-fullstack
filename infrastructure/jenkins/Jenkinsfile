@@ -1,0 +1,330 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION          = 'ap-south-1'
+        AWS_ACCOUNT_ID      = credentials('aws-account-id')
+        ECR_REGISTRY        = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        ECR_FRONTEND_REPO   = "${ECR_REGISTRY}/blogging-platform/frontend"
+        ECR_BACKEND_REPO    = "${ECR_REGISTRY}/blogging-platform/backend"
+        GIT_REPO            = 'https://github.com/SSM2011/blogging-platform-fullstack.git'
+        GIT_BRANCH          = 'main'
+        TARGET_ENV          = 'production'
+        ARGOCD_SERVER       = credentials('argocd-server-url')
+        API_DOMAIN          = 'https://api.writersroom.developersubodh.in'
+        SCANNER_HOME        = tool 'dependency-check'
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                cleanWs()
+                git branch: "${GIT_BRANCH}",
+                    url: "${GIT_REPO}",
+                    credentialsId: 'github-credentials'
+
+                script {
+                    env.IMAGE_TAG = "build-${env.BUILD_NUMBER}-${sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()}"
+                    env.GIT_COMMIT_SHORT = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                }
+            }
+        }
+
+        stage('Install & Test') {
+            parallel {
+                stage('Backend: Install & Test') {
+                    steps {
+                        dir('server') {
+                            sh 'npm ci'
+                            sh 'npm test'
+                        }
+                    }
+                }
+                stage('Frontend: Install & Lint') {
+                    steps {
+                        dir('blogging website - frontend') {
+                            sh 'npm ci'
+                            sh 'npm run lint'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+            parallel {
+                stage('Backend: OWASP') {
+                    steps {
+                        dependencyCheck additionalArguments: """
+                            --project "blogging-platform-backend"
+                            --scan server/
+                            --format HTML
+                            --format JSON
+                            --out reports/owasp-backend
+                            --disableYarnAudit
+                        """, odcInstallation: 'dependency-check'
+                    }
+                    post {
+                        always {
+                            dependencyCheckPublisher pattern: 'reports/owasp-backend/dependency-check-report.json',
+                                failedTotalCritical: 1,
+                                failedTotalHigh: 5
+                        }
+                    }
+                }
+                stage('Frontend: OWASP') {
+                    steps {
+                        dependencyCheck additionalArguments: """
+                            --project "blogging-platform-frontend"
+                            --scan "blogging website - frontend/"
+                            --format HTML
+                            --format JSON
+                            --out reports/owasp-frontend
+                            --disableYarnAudit
+                        """, odcInstallation: 'dependency-check'
+                    }
+                    post {
+                        always {
+                            dependencyCheckPublisher pattern: 'reports/owasp-frontend/dependency-check-report.json',
+                                failedTotalCritical: 1,
+                                failedTotalHigh: 5
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Trivy Filesystem Scan') {
+            parallel {
+                stage('Backend: Trivy FS') {
+                    steps {
+                        sh '''
+                            trivy fs \
+                                --severity HIGH,CRITICAL \
+                                --format table \
+                                --output reports/trivy-backend-fs.txt \
+                                server/
+                        '''
+                        sh '''
+                            trivy fs \
+                                --severity CRITICAL \
+                                --exit-code 1 \
+                                server/
+                        '''
+                    }
+                }
+                stage('Frontend: Trivy FS') {
+                    steps {
+                        sh '''
+                            trivy fs \
+                                --severity HIGH,CRITICAL \
+                                --format table \
+                                --output reports/trivy-frontend-fs.txt \
+                                "blogging website - frontend/"
+                        '''
+                        sh '''
+                            trivy fs \
+                                --severity CRITICAL \
+                                --exit-code 1 \
+                                "blogging website - frontend/"
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Docker Build & Push to ECR') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                        aws ecr get-login-password --region ${AWS_REGION} | \
+                        docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                    """
+
+                    // Build Backend
+                    sh """
+                        docker build \
+                            --no-cache \
+                            -f infrastructure/docker/backend/Dockerfile \
+                            -t ${ECR_BACKEND_REPO}:${IMAGE_TAG} \
+                            -t ${ECR_BACKEND_REPO}:latest \
+                            server/
+                    """
+
+                    // Build Frontend
+                    sh """
+                        docker build \
+                            --no-cache \
+                            --build-arg VITE_SERVER_DOMAIN=${API_DOMAIN} \
+                            -f infrastructure/docker/frontend/Dockerfile \
+                            -t ${ECR_FRONTEND_REPO}:${IMAGE_TAG} \
+                            -t ${ECR_FRONTEND_REPO}:latest \
+                            "blogging website - frontend/"
+                    """
+
+                    // Push Backend
+                    sh """
+                        docker push ${ECR_BACKEND_REPO}:${IMAGE_TAG}
+                        docker push ${ECR_BACKEND_REPO}:latest
+                    """
+
+                    // Push Frontend
+                    sh """
+                        docker push ${ECR_FRONTEND_REPO}:${IMAGE_TAG}
+                        docker push ${ECR_FRONTEND_REPO}:latest
+                    """
+                }
+            }
+        }
+
+        stage('ECR Image Scan') {
+            parallel {
+                stage('Backend: ECR Scan') {
+                    steps {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                            sh """
+                                aws ecr start-image-scan \
+                                    --repository-name blogging-platform/backend \
+                                    --image-id imageTag=${IMAGE_TAG} \
+                                    --region ${AWS_REGION}
+                            """
+                            sh """
+                                aws ecr wait image-scan-complete \
+                                    --repository-name blogging-platform/backend \
+                                    --image-id imageTag=${IMAGE_TAG} \
+                                    --region ${AWS_REGION}
+                            """
+                            script {
+                                def scanResults = sh(
+                                    script: """
+                                        aws ecr describe-image-scan-findings \
+                                            --repository-name blogging-platform/backend \
+                                            --image-id imageTag=${IMAGE_TAG} \
+                                            --region ${AWS_REGION} \
+                                            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' \
+                                            --output text
+                                    """,
+                                    returnStdout: true
+                                ).trim()
+
+                                if (scanResults && scanResults != 'None' && scanResults.toInteger() > 0) {
+                                    error "CRITICAL vulnerabilities found in backend image: ${scanResults}"
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('Frontend: ECR Scan') {
+                    steps {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                            sh """
+                                aws ecr start-image-scan \
+                                    --repository-name blogging-platform/frontend \
+                                    --image-id imageTag=${IMAGE_TAG} \
+                                    --region ${AWS_REGION}
+                            """
+                            sh """
+                                aws ecr wait image-scan-complete \
+                                    --repository-name blogging-platform/frontend \
+                                    --image-id imageTag=${IMAGE_TAG} \
+                                    --region ${AWS_REGION}
+                            """
+                            script {
+                                def scanResults = sh(
+                                    script: """
+                                        aws ecr describe-image-scan-findings \
+                                            --repository-name blogging-platform/frontend \
+                                            --image-id imageTag=${IMAGE_TAG} \
+                                            --region ${AWS_REGION} \
+                                            --query 'imageScanFindings.findingSeverityCounts.CRITICAL' \
+                                            --output text
+                                    """,
+                                    returnStdout: true
+                                ).trim()
+
+                                if (scanResults && scanResults != 'None' && scanResults.toInteger() > 0) {
+                                    error "CRITICAL vulnerabilities found in frontend image: ${scanResults}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Update Kubernetes Manifests') {
+            steps {
+                sh """
+                    chmod +x infrastructure/scripts/update-manifests.sh
+                    ./infrastructure/scripts/update-manifests.sh \
+                        ${TARGET_ENV} \
+                        blogging-platform/backend \
+                        ${IMAGE_TAG} \
+                        ${ECR_REGISTRY}
+                    ./infrastructure/scripts/update-manifests.sh \
+                        ${TARGET_ENV} \
+                        blogging-platform/frontend \
+                        ${IMAGE_TAG} \
+                        ${ECR_REGISTRY}
+                """
+            }
+        }
+
+        stage('Git Commit & Push Manifests') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    sh """
+                        git config user.email "jenkins@blogging-platform.ci"
+                        git config user.name "Jenkins CI"
+                        git add infrastructure/kubernetes/overlays/
+                        git commit -m "ci: update ${TARGET_ENV} image tags to ${IMAGE_TAG} [skip ci]" || true
+                        git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/SSM2011/blogging-platform-fullstack.git ${GIT_BRANCH}
+                    """
+                }
+            }
+        }
+
+        stage('ArgoCD Sync') {
+            steps {
+                withCredentials([string(credentialsId: 'argocd-auth-token', variable: 'ARGOCD_AUTH_TOKEN')]) {
+                    sh """
+                        argocd app sync blogging-platform-${TARGET_ENV} \
+                            --server ${ARGOCD_SERVER} \
+                            --auth-token ${ARGOCD_AUTH_TOKEN} \
+                            --grpc-web \
+                            --force \
+                            --prune
+                    """
+                    sh """
+                        argocd app wait blogging-platform-${TARGET_ENV} \
+                            --server ${ARGOCD_SERVER} \
+                            --auth-token ${ARGOCD_AUTH_TOKEN} \
+                            --grpc-web \
+                            --health \
+                            --timeout 300
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
+            sh 'docker system prune -f || true'
+        }
+        success {
+            echo "Pipeline completed successfully. Image tag: ${IMAGE_TAG}"
+        }
+        failure {
+            echo "Pipeline failed at stage: ${env.STAGE_NAME}"
+        }
+    }
+}

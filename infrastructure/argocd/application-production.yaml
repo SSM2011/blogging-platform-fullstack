@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blogging-platform-production
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: blogging-platform
+    environment: production
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: blogging-platform-deployments
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: blogging-platform-alerts
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: blogging-platform
+
+  source:
+    repoURL: https://github.com/SSM2011/blogging-platform-fullstack.git
+    targetRevision: main
+    path: infrastructure/kubernetes/overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: blogging-platform
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  revisionHistoryLimit: 15

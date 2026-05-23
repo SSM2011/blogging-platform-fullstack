@@ -1,0 +1,15 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: blogging-backend-hpa
+spec:
+  minReplicas: 1
+  maxReplicas: 2
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: blogging-frontend-hpa
+spec:
+  minReplicas: 1
+  maxReplicas: 2

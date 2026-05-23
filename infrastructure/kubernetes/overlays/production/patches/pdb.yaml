@@ -1,0 +1,25 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: blogging-backend-pdb
+  namespace: blogging-platform
+  labels:
+    app: blogging-backend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: blogging-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: blogging-frontend-pdb
+  namespace: blogging-platform
+  labels:
+    app: blogging-frontend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: blogging-frontend
