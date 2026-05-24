@@ -12,7 +12,7 @@ pipeline {
         TARGET_ENV          = 'production'
         ARGOCD_SERVER       = credentials('argocd-server-url')
         API_DOMAIN          = 'https://api.writersroom.developersubodh.in'
-        SCANNER_HOME        = tool 'dependency-check'
+        // SCANNER_HOME        = tool 'dependency-check'
     }
 
     options {
