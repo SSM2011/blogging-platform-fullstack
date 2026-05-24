@@ -105,6 +105,7 @@ pipeline {
             parallel {
                 stage('Backend: Trivy FS') {
                     steps {
+                        sh 'mkdir -p reports'
                         sh '''
                             trivy fs \
                                 --severity HIGH,CRITICAL \
