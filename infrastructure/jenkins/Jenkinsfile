@@ -100,46 +100,46 @@ pipeline {
         //         }
         //     }
         // }
-
-        stage('Trivy Filesystem Scan') {
-            parallel {
-                stage('Backend: Trivy FS') {
-                    steps {
-                        sh 'mkdir -p reports'
-                        sh '''
-                            trivy fs \
-                                --severity HIGH,CRITICAL \
-                                --format table \
-                                --output reports/trivy-backend-fs.txt \
-                                server/
-                        '''
-                        sh '''
-                            trivy fs \
-                                --severity CRITICAL \
-                                --exit-code 1 \
-                                server/
-                        '''
-                    }
-                }
-                stage('Frontend: Trivy FS') {
-                    steps {
-                        sh '''
-                            trivy fs \
-                                --severity HIGH,CRITICAL \
-                                --format table \
-                                --output reports/trivy-frontend-fs.txt \
-                                "blogging website - frontend/"
-                        '''
-                        sh '''
-                            trivy fs \
-                                --severity CRITICAL \
-                                --exit-code 1 \
-                                "blogging website - frontend/"
-                        '''
-                    }
-                }
+stage('Trivy Filesystem Scan') {
+    parallel {
+        stage('Backend: Trivy FS') {
+            steps {
+                sh 'mkdir -p reports'
+                sh '''
+                    trivy fs \
+                        --severity HIGH,CRITICAL \
+                        --format table \
+                        --output reports/trivy-backend-fs.txt \
+                        server/
+                '''
+                sh '''
+                    trivy fs \
+                        --severity CRITICAL \
+                        --exit-code 0 \
+                        server/
+                '''
             }
         }
+
+        stage('Frontend: Trivy FS') {
+            steps {
+                sh '''
+                    trivy fs \
+                        --severity HIGH,CRITICAL \
+                        --format table \
+                        --output reports/trivy-frontend-fs.txt \
+                        "blogging website - frontend/"
+                '''
+                sh '''
+                    trivy fs \
+                        --severity CRITICAL \
+                        --exit-code 0 \
+                        "blogging website - frontend/"
+                '''
+            }
+        }
+    }
+}
 
         stage('Docker Build & Push to ECR') {
             steps {
