@@ -10,7 +10,7 @@ INFRA_DIR="${REPO_ROOT}/infrastructure"
 
 AWS_REGION="${AWS_REGION:-ap-south-1}"
 ENVIRONMENT="${ENVIRONMENT:-production}"
-CLUSTER_NAME="blogging-platform-${ENVIRONMENT}-eks"
+CLUSTER_NAME="bp-production-eks"
 
 echo "============================================"
 echo "  Blogging Platform Infrastructure Setup"
