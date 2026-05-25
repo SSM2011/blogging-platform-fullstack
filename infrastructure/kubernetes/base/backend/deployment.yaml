@@ -119,5 +119,5 @@ metadata:
   namespace: blogging-platform
 type: Opaque
 stringData:
-  DB_LOCATION: "REPLACE_WITH_MONGODB_URI"
-  SECRET_ACCESS_KEY: "REPLACE_WITH_JWT_SECRET"
+  DB_LOCATION: "mongodb+srv://subodhmule2011:Ic35D1SmhhRHT901@mern-blogging-website.ulowd.mongodb.net/?retryWrites=true&w=majority&appName=mern-blogging-website"
+  SECRET_ACCESS_KEY: "a9aaafe6f0dbf6a2d1af5f5ecedebfcc8cc65f24cc492ef8f13f29be98b2cd5b3ecea079d5be7a7a88aa86716414215a8cece841c907f534276d2c1bcb80cdaa"
