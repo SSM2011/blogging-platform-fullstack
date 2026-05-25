@@ -4,8 +4,8 @@ metadata:
   name: blogging-backend-hpa
   namespace: blogging-platform
 spec:
-  minReplicas: 3
-  maxReplicas: 10
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
@@ -26,8 +26,8 @@ metadata:
   name: blogging-frontend-hpa
   namespace: blogging-platform
 spec:
-  minReplicas: 3
-  maxReplicas: 8
+  minReplicas: 1
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
