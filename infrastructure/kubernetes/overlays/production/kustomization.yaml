@@ -4,8 +4,8 @@ kind: Kustomization
 namespace: blogging-platform
 
 resources:
-  - ../../base
-  - patches/pdb.yaml
+- ../../base
+- patches/pdb.yaml
 
 namePrefix: prod-
 
@@ -13,23 +13,23 @@ commonLabels:
   environment: production
 
 patches:
-  - path: patches/frontend-replicas.yaml
-  - path: patches/backend-replicas.yaml
-  - path: patches/hpa.yaml
+- path: patches/frontend-replicas.yaml
+- path: patches/backend-replicas.yaml
+- path: patches/hpa.yaml
 
 images:
-  - name: blogging-platform/backend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
-    newTag: latest
-  - name: blogging-platform/frontend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
-    newTag: latest
+- name: blogging-platform/backend
+  newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+  newTag: build-19-1f33e92
+- name: blogging-platform/frontend
+  newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+  newTag: build-19-1f33e92
 
 configMapGenerator:
-  - name: backend-config
-    behavior: merge
-    literals:
-      - NODE_ENV=production
-      - PORT=3000
-      - AWS_REGION=ap-south-1
-      - AWS_BUCKET_NAME=my-fullstack-blogging-platform
+- behavior: merge
+  literals:
+  - NODE_ENV=production
+  - PORT=3000
+  - AWS_REGION=ap-south-1
+  - AWS_BUCKET_NAME=my-fullstack-blogging-platform
+  name: backend-config
