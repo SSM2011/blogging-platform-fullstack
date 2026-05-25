@@ -7,7 +7,7 @@ resources:
   - ../../base
   - patches/pdb.yaml
 
-namePrefix: prod-
+
 
 commonLabels:
   environment: production
@@ -19,15 +19,14 @@ patches:
 
 images:
   - name: blogging-platform/backend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+    newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
     newTag: latest
   - name: blogging-platform/frontend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+    newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
     newTag: latest
 
 configMapGenerator:
   - name: backend-config
-    behavior: merge
     literals:
       - NODE_ENV=production
       - PORT=3000
