@@ -2,6 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: blogging-backend-hpa
+  namespace: blogging-platform
 spec:
   minReplicas: 3
   maxReplicas: 10
@@ -23,6 +24,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: blogging-frontend-hpa
+  namespace: blogging-platform
 spec:
   minReplicas: 3
   maxReplicas: 8
