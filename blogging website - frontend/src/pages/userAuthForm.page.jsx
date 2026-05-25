@@ -54,7 +54,7 @@ const UserAuthForm = ({ type }) => {
             return toast.error("Enter Email");
         }
 
-        let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+        let emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
         if (!emailRegex.test(email)) {
             return toast.error("Email is invalid");
         }

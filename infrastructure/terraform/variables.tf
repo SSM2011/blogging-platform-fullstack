@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Project name used for resource naming"
   type        = string
-  default     = "blogging-platform"
+  default     = "bp"
 }
 
 variable "environment" {
@@ -48,25 +48,25 @@ variable "private_subnet_cidrs" {
 variable "eks_cluster_version" {
   description = "Kubernetes version for EKS cluster"
   type        = string
-  default     = "1.29"
+  default     = "1.30"
 }
 
 variable "eks_node_instance_types" {
   description = "EC2 instance types for EKS node group"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
 }
 
 variable "eks_node_desired_size" {
   description = "Desired number of worker nodes"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "eks_node_min_size" {
   description = "Minimum number of worker nodes"
   type        = number
-  default     = 1
+  default     = 3
 }
 
 variable "eks_node_max_size" {

@@ -1,22 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 namespace: blogging-platform
-
 resources:
   - ../../base
   - patches/pdb.yaml
-
-
-
 commonLabels:
   environment: production
-
 patches:
   - path: patches/frontend-replicas.yaml
   - path: patches/backend-replicas.yaml
   - path: patches/hpa.yaml
-
 images:
   - name: blogging-platform/backend
     newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
@@ -24,7 +17,6 @@ images:
   - name: blogging-platform/frontend
     newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
     newTag: latest
-
 configMapGenerator:
   - name: backend-config
     literals:

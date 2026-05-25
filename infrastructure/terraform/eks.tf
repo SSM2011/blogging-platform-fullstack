@@ -34,6 +34,7 @@ module "eks" {
     general = {
       name = "${var.project_name}-${var.environment}-workers"
 
+      ami_type = "AL2023_x86_64_STANDARD"
       instance_types = var.eks_node_instance_types
       capacity_type  = "ON_DEMAND"
 
