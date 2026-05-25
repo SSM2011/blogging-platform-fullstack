@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: web
     app.kubernetes.io/part-of: blogging-platform
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: blogging-frontend
