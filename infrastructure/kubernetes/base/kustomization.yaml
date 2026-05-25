@@ -20,8 +20,8 @@ commonLabels:
 
 images:
   - name: blogging-platform/backend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+    newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
     newTag: latest
   - name: blogging-platform/frontend
-    newName: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+    newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
     newTag: latest
