@@ -13,7 +13,7 @@ patches:
 images:
 - name: blogging-platform/backend
   newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
-  newTag: build-27-77b6334
+  newTag: build-28-0f24c7c
 - name: blogging-platform/frontend
   newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
-  newTag: build-27-77b6334
+  newTag: build-28-0f24c7c
