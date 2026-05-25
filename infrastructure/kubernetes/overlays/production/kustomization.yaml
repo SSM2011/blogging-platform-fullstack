@@ -20,10 +20,10 @@ patches:
 images:
 - name: blogging-platform/backend
   newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
-  newTag: build-21-7fbf672
+  newTag: build-22-20a2056
 - name: blogging-platform/frontend
   newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
-  newTag: build-21-7fbf672
+  newTag: build-22-20a2056
 
 configMapGenerator:
 - behavior: merge
