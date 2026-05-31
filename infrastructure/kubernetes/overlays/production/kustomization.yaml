@@ -12,8 +12,8 @@ patches:
 - path: patches/hpa.yaml
 images:
 - name: blogging-platform/backend
-  newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
-  newTag: build-28-0f24c7c
+  newName: 340577260063.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/backend
+  newTag: build-5-fc65190
 - name: blogging-platform/frontend
-  newName: 139822119368.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
-  newTag: build-28-0f24c7c
+  newName: 340577260063.dkr.ecr.ap-south-1.amazonaws.com/blogging-platform/frontend
+  newTag: build-5-fc65190
